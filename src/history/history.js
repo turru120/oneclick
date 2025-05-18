@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const list = document.getElementById("historyList");
   list.innerHTML = "";
 
-  if (history.length === 0) {    
+  if (history.length === 0) {
     list.innerHTML = `<tr><td colspan="4">저장된 이력이 없습니다.</td></tr>`;
     return;
   }

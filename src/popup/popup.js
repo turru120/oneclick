@@ -1,5 +1,14 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // 환경설정 버튼
+
+    // 로그인 상태 확인
+     const loginRedirect = document.getElementById('loginRedirect');
+    if (loginRedirect) {
+        loginRedirect.addEventListener('click', () => {
+            window.open('./login/login.html', '_blank'); // 새 탭에서 열기
+        });
+    }
+
+    // 환경설정 버튼 -> 새 탭
     const settingsBtn = document.getElementById("settingsBtn");
     if (settingsBtn) {
         settingsBtn.addEventListener("click", () => {
@@ -9,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 이력조회 버튼
+    // 이력조회 버튼 -> 새 탭
     const historyBtn = document.getElementById("historyBtn");
     if (historyBtn) {
         historyBtn.addEventListener("click", () => {
@@ -48,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
 
             } catch (error) {
-                console.error("오류 발생:",error);
+                console.error("오류 발생:", error);
                 updateResult("오류가 발생했습니다.");
             }
         });
