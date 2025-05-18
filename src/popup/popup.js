@@ -1,10 +1,10 @@
 document.addEventListener("DOMContentLoaded", () => {
 
     // 로그인 상태 확인
-     const loginRedirect = document.getElementById('loginRedirect');
+    const loginRedirect = document.getElementById('loginRedirect');
     if (loginRedirect) {
         loginRedirect.addEventListener('click', () => {
-            window.open('./login/login.html', '_blank'); // 새 탭에서 열기
+            window.open('./login/login.html', '_blank');
         });
     }
 
@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
                 // 현재 탭이 유효한지 확인
-                chrome.tabs.sendMessage(tab.id, { action: "getText" }, (response) => {
+                chrome.tabs.sendMessage(tab.id, { action: "getTextAndTitle" }, (response) => {
                     if (chrome.runtime.lastError || !response || !response.text) {
                         console.error("본문 추출 실패", chrome.runtime.lastError);
                         updateResult("본문 추출 중 오류가 발생했습니다.");
@@ -45,16 +45,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     const url = tab.url;
                     const pageText = response.text;
+                    const pageTitle = response.title;
 
-                    // url과 본문 텍스트를 저장
-                    chrome.storage.local.set({ savedUrl: url, savedText: pageText }, () => {
-                        console.log("본문 저장 완료");
-                        updateResult(pageText);  // 확인용 출력
+                    // 로그 출력
+                    console.log("요약 요청 데이터:", {
+                        url: url,
+                        title: pageTitle,
+                        textLength: pageText.length,
+                        date: new Date().toISOString(),
                     });
 
-                    //서버에 url과 본문 텍스트 전송
-                    sendToServer(url, pageText);
+                    // 사용자 설정 가져오기
+                    chrome.storage.local.get(
+                        ["summaryLanguage", "summaryFontSize", "summaryOutputFormat"],
+                        (settings) => {
+                            const language = settings.summaryLanguage || "한국어";
+                            const fontSize = settings.summaryFontSize || 5;
+                            const outputFormat = settings.summaryOutputFormat || "inline";
+
+                            // 서버에 전송
+                            sendToServer(url, pageText, language, fontSize, outputFormat, (summary) => {
+                                //로그 출력
+                                console.log("서버로부터 받은 요약:", summary);
+
+                                saveHistory(url, pageText, pageTitle, summary);
+                            });
+                        });
                 });
+
 
             } catch (error) {
                 console.error("오류 발생:", error);
@@ -73,21 +91,60 @@ function updateResult(message) {
 }
 
 // 서버에 POST 요청 보내는 함수
-function sendToServer(url, text) {
+function sendToServer(url, text, language, fontSize, outputFormat, callback) {
     fetch("http://localhost:5000/api/summary/url", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ url, text })
+        body: JSON.stringify({ url, text, language, fontSize })
     })
         .then(response => response.json())
         .then(data => {
-            console.log("서버 요약 결과:", data);
-            updateResult(data.summary || "요약 결과를 받지 못했습니다.");
+            const summary = data.summary || "요약 결과를 받지 못했습니다.";
+
+            if (outputFormat === "popup") {
+                const popup = window.open("", "summaryPopup", "width=400,height=300");
+                if (popup) {
+                    popup.document.body.innerHTML = `<p style="font-size:${fontSize}px;">${summary}</p>`;
+                } else {
+                    alert("팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.");
+                }
+            } else {
+                updateResult(summary);
+            }
+
+            if (callback) callback(summary);
         })
         .catch(err => {
             console.error("서버 오류:", err);
             updateResult("서버 요청 중 오류가 발생했습니다.");
         });
+}
+
+
+//이력 날짜순 정렬 저장
+function saveHistory(url, text, title, summary) {
+    const today = new Date().toISOString();
+
+    chrome.storage.local.get(["summaryHistory"], (result) => {
+        const historyArray = result.summaryHistory || [];
+
+        const newEntry = {
+            url,
+            text,
+            title,
+            summary,
+            date: today
+        };
+
+        historyArray.unshift(newEntry);
+
+        // 최신 날짜 순으로 정렬
+        historyArray.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        chrome.storage.local.set({ summaryHistory: historyArray }, () => {
+            console.log("요약 이력 저장 완료");
+        });
+    });
 }
