@@ -35,6 +35,9 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
+                //로그 출력
+                console.log("현재 탭:", tab);
+
                 // 현재 탭이 유효한지 확인
                 chrome.tabs.sendMessage(tab.id, { action: "getTextAndTitle" }, (response) => {
                     if (chrome.runtime.lastError || !response || !response.text) {

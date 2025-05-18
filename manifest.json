@@ -1,6 +1,6 @@
 {
     "manifest_version": 3,
-    "name": "ONECLICK",
+    "name": "news_summarizer_system",
     "version": "1.0.0",
     "description": "원클릭 멀티모달 기사 요약 서비스",
     "permissions": [
@@ -13,6 +13,9 @@
     "host_permissions": [
         "<all_urls>"
     ],
+    "background": {
+        "service_worker": "src/background/background.js"
+    },
     "action": {
         "default_popup": "src/popup/popup.html",
         "default_icon": {

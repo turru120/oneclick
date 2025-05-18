@@ -11,37 +11,12 @@
             <span id="settingsBtn" data-tooltip="환경설정">⚙️</span>
             <span id="historyBtn" data-tooltip="이력조회">📑</span>
         </div>
-        <button id="loginBtn" width="50px" height="40px">로그인</button>
-        <button id="signUpBtn" width="50px" height="40px">회원 가입</button>
+        <div class="user-info" id="loginRedirect" style="cursor: pointer">
+            <span class="username">로그인</span>
+        </div>
 
-        <div id="signupFormContainer" style="display: none">
-            <h2>회원가입 폼</h2>
-            <form id="signupForm">
-                <div>
-                    <label for="signup_userId">아이디:</label>
-                    <input type="text" id="signup_userId" name="signup_userId" required />
-                </div>
-                <div>
-                    <label for="signup_password">비밀번호:</label>
-                    <input type="password" id="signup_password" name="signup_password" required />
-                </div>
-                <button type="submit" id="signup_submitBtn">가입</button>
-            </form>
-        </div>
-        <div id="loginFormContainer" style="display: none">
-            <h2>로그인 폼</h2>
-            <form id="loginForm">
-                <div>
-                    <label for="login_userId">아이디:</label>
-                    <input type="text" id="login_userId" name="login_userId" required />
-                </div>
-                <div>
-                    <label for="login_password">비밀번호:</label>
-                    <input type="password" id="login_password" name="login_password" required />
-                </div>
-                <button type="submit" id="login_submitBtn">로그인</button>
-            </form>
-        </div>
+        <div id="signupFormContainer" style="display: none"></div>
+        <div id="loginFormContainer" style="display: none"></div>
 
         <h1>원클릭 멀티모달 기사 요약 서비스</h1>
 
@@ -49,8 +24,34 @@
 
         <div id="result"></div>
 
+        <div id="login-container" style="display: none">
+            <h2>로그인 및 회원가입</h2>
+            <p class="subtext">가입하신 이메일과 비밀번호를 입력하세요.</p>
+            <form id="signupform">
+                <div class="form-group">
+                    <label for="email">이메일</label>
+                    <input type="email" id="email" placeholder="이메일" />
+                </div>
+
+                <div class="form-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" placeholder="비밀번호" />
+                </div>
+
+                <div class="options">
+                    <label><input type="checkbox" checked /> 로그인 상태 유지</label>
+                    <a href="#">비밀번호 찾기</a>
+                </div>
+
+                <button type="submit" id="login-btn">로그인</button>
+                <button type="button" id="signup-btn">회원가입</button>
+                <button type="button" id="google-btn">Continue With Google</button>
+            </form>
+        </div>
+
         <script src="popup.js"></script>
-        <script src="signup.js"></script>
         <script src="login.js"></script>
+        <script src="signup.js"></script>
+        <script src="content.js"></script>
     </body>
 </html>

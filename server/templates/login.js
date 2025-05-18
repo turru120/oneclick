@@ -1,60 +1,113 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const loginButton = document.getElementById("loginBtn"); // 로그인 버튼 (회원가입 버튼 옆에 있다고 가정)
-    const loginFormContainer = document.getElementById("loginFormContainer");
-    const loginForm = document.getElementById("loginForm");
-    const loginSubmitBtn = document.getElementById("login_submitBtn");
+    const loginRedirect = document.getElementById("loginRedirect");
+    const loginContainer = document.getElementById("login-container");
+    const loginBtn = document.getElementById("login-btn");
+    const googleBtn = document.getElementById("google-btn");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
 
-    // 로그인 버튼 클릭 시 폼 표시
-    if (loginButton && loginFormContainer) {
-        loginButton.addEventListener("click", function () {
-            if (loginFormContainer.style.display == "block") {
-                loginFormContainer.style.display = "none";
-            } else {
-                loginFormContainer.style.display = "block";
+    const updateLoginState = () => {
+        const user = localStorage.getItem("user");
+        if (user) {
+            const userData = JSON.parse(user);
+            if (userData.isLoggedIn) {
+                loginRedirect.innerHTML = `<span class="username">${userData.email}</span> (로그아웃)`;
+                loginContainer.style.display = "none";
+                loginBtn.innerText = "로그아웃";
+                return true;
             }
-            // 또는 'flex' 등 원하는 레이아웃 방식
-        });
-    }
+        }
+        loginRedirect.innerText = "로그인";
+        loginContainer.style.display = "none";
+        loginBtn.innerText = "로그인";
+        return false;
+    };
 
-    // 로그인 폼 제출 이벤트 처리
-    if (loginForm && loginSubmitBtn) {
-        loginForm.addEventListener("submit", function (event) {
-            event.preventDefault(); // 기본 폼 제출 동작 방지
+    // 페이지 로드 시 로그인 상태 확인 및 UI 업데이트
+    const isLoggedIn = updateLoginState();
 
-            const userId = document.getElementById("login_userId").value;
-            const password = document.getElementById("login_password").value;
+    // 로그인/로그아웃 버튼 클릭
+    loginRedirect.addEventListener("click", function () {
+        if (isLoggedIn) {
+            // 로그아웃 로직
+            localStorage.removeItem("user");
+            updateLoginState();
+            alert("로그아웃 되었습니다.");
+            // 필요하다면 페이지 리로드 또는 다른 UI 업데이트
+            window.location.reload();
+        } else {
+            // 로그인 폼 표시
+            loginContainer.style.display = "block";
+        }
+    });
 
-            fetch(fetch_url + "/login", {
-                // Flask 서버의 로그인 엔드포인트
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    user_id: userId, // 서버에서 사용하는 아이디 필드명에 맞춰 수정 (예: user_id)
-                    user_pw: password,
-                }),
+    // 로그인 폼 제출
+    loginBtn.addEventListener("click", function (event) {
+        event.preventDefault(); // 기본 폼 제출 동작 방지
+
+        if (loginBtn.innerText === "로그아웃") {
+            // 이미 로그인된 상태이므로 클릭 시 로그아웃 처리
+            localStorage.removeItem("user");
+            updateLoginState();
+            alert("로그아웃 되었습니다.");
+            window.location.reload();
+            return;
+        }
+
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
+
+        if (!email || !password) {
+            alert("이메일과 비밀번호를 입력해주세요.");
+            return;
+        }
+
+        // 실제 서버 요청
+        fetch(fetch_url + "/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                user_id: email,
+                user_pw: password,
+            }),
+        })
+            .then(async (response) => {
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `로그인 실패: ${response.status}`);
+                }
+                return response.json();
             })
-                .then(async (response) => {
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.message || `로그인 실패: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then((data) => {
-                    console.log("로그인 성공:", data);
-                    loginFormContainer.style.display = "none"; // 폼 숨기기
-                    // 로그인 성공 후 처리 (예: 페이지 리디렉션, 사용자 정보 업데이트 등)
-                    alert(data.message || "로그인 성공!");
-                    loginButton.innerText = "로그아웃";
-                    // window.location.href = '/dashboard'; // 예시: 대시보드 페이지로 리디렉션
-                })
-                .catch((error) => {
-                    console.error("로그인 실패:", error);
-                    alert(error.message || "로그인 처리 중 오류가 발생했습니다.");
-                    // 오류 처리 로직 (예: 에러 메시지 표시)
-                });
-        });
-    }
+            .then((data) => {
+                alert(data.message || "로그인 성공!");
+
+                // 로그인 상태를 localStorage에 저장
+                localStorage.setItem(
+                    "user",
+                    JSON.stringify({
+                        email: email,
+                        isLoggedIn: true,
+                    })
+                );
+                updateLoginState();
+                // 로그인 성공 후 필요하다면 페이지 리로드 또는 다른 UI 업데이트
+                window.location.reload();
+            })
+            .catch((error) => {
+                console.error("로그인 실패:", error);
+                alert(error.message || "로그인 중 오류가 발생했습니다.");
+            });
+    });
+
+    // Google 로그인 (기능 구현 필요)
+    googleBtn.addEventListener("click", function () {
+        alert("Google 로그인 기능은 아직 구현되지 않았습니다.");
+        // Google 로그인 로직 추가
+    });
+    // 구글 로그인 버튼 클릭
+    googleBtn.addEventListener("click", () => {
+        alert("Google 로그인은 현재 지원되지 않습니다.");
+    });
 });
